@@ -12,9 +12,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -69,9 +67,9 @@ public class Controller {
         }
     }
     @GetMapping("/getId")
-    public ResponseEntity<HashMap<Long, String>> getIdByName(@RequestBody Map<String, String> requestMap) throws IOException, InterruptedException {
-        String productName = requestMap.get("productName");
-        return ResponseEntity.ok().body(wildBerriesService.getIdByName(productName)) ;
+    public ResponseEntity<HashMap<Long, String>> getIdByName(@RequestBody Map<String, String> requestMap) throws InterruptedException {
+        String request = requestMap.get("productName");
+        return ResponseEntity.ok().body(wildBerriesService.getIdByName(request)) ;
     }
     @GetMapping
     public String home(){

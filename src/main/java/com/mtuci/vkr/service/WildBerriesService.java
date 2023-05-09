@@ -20,16 +20,15 @@ public class WildBerriesService {
         return null;
     }
 
-    public HashMap<Long, String> getIdByName(String productName) throws InterruptedException {
+    public HashMap<Long, String> getIdByName(String request) throws InterruptedException {
         // Установка пути к драйверу Chrome
         System.setProperty("webdriver.chrome.driver", "src/main/resources/chromedriver.exe");
         ChromeOptions options = new ChromeOptions();
         options.addArguments("--remote-allow-origins=*");
         // Создание экземпляра WebDriver
         WebDriver driver = new ChromeDriver(options);
-        String url = "https://www.wildberries.ru/catalog/0/search.aspx?search=" + productName;
+        String url = "https://www.wildberries.ru/catalog/0/search.aspx?search=" + request;
         driver.get(url);
-
         // Явное ожидание элемента
         WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
         By productSelector = By.className("product-card-list");
@@ -61,6 +60,7 @@ public class WildBerriesService {
             String id = (href.substring(href.lastIndexOf("g") + 2, href.lastIndexOf("d") - 1));
             hashMap.put(Long.parseLong(id), href);
         }
+        driver.close();
         return hashMap;
     }
 }
