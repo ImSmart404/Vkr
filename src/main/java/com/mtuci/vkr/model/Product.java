@@ -6,11 +6,10 @@ import lombok.Data;
 @Data
 public class Product {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
     private String brand;
     private Long priceU;
-    private Long sale;
+    private Long salePrice;
     private Integer rating;
 
     private Integer pics;
