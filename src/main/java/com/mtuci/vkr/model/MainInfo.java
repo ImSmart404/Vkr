@@ -4,7 +4,7 @@ import lombok.Data;
 
 @Entity
 @Data
-public class Product {
+public class MainInfo {
     @Id
     private Long id;
     private String brand;

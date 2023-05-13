@@ -87,7 +87,7 @@
             var productName = document.getElementById('productName').value;
             var pages = document.getElementById('pages').value;
 
-            var url = '/vkr/getProducts?productName=' + encodeURIComponent(productName) + '&pages=' + encodeURIComponent(pages);
+            var url = '/vkr/getProductsMainInfo?productName=' + encodeURIComponent(productName) + '&pages=' + encodeURIComponent(pages);
 
             fetch(url, {
                 method: 'GET'
@@ -99,30 +99,30 @@
                     tableBody.innerHTML = '';
 
                     // Добавляем данные в таблицу
-                    data.forEach(function(product) {
+                    data.forEach(function(mainInfo) {
                         var row = document.createElement('tr');
 
                         var idCell = document.createElement('td');
-                        idCell.textContent = product.id;
+                        idCell.textContent = mainInfo.id;
                         row.appendChild(idCell);
 
                         var priceCell = document.createElement('td');
-                        priceCell.textContent = product.priceU;
+                        priceCell.textContent = mainInfo.priceU;
                         row.appendChild(priceCell);
 
                         var salePriceCell = document.createElement('td');
-                        salePriceCell.textContent = product.salePrice;
+                        salePriceCell.textContent = mainInfo.salePrice;
                         row.appendChild(salePriceCell);
 
                         var ratingCell = document.createElement('td');
-                        ratingCell.textContent = product.rating;
+                        ratingCell.textContent = mainInfo.rating;
                         row.appendChild(ratingCell);
                         var brandCell = document.createElement('td');
-                        brandCell.textContent = product.brand;
+                        brandCell.textContent = mainInfo.brand;
                         row.appendChild(brandCell);
 
                         var picturesCell = document.createElement('td');
-                        picturesCell.textContent = product.pics;
+                        picturesCell.textContent = mainInfo.pics;
                         row.appendChild(picturesCell);
 
                         tableBody.appendChild(row);

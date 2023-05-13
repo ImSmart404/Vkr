@@ -1,0 +1,40 @@
+databaseChangeLog:
+  - changeSet:
+      id: createLoanOrderTable
+      author: Mikhail
+      changes:
+        - createTable:
+            tableName: main_info
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: brand
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: priceu
+                  type: bigint
+                  constraints:
+                    nullable: false
+              - column:
+                  name: sale_price
+                  type: bigint
+                  constraints:
+                    nullable: false
+              - column:
+                  name: rating
+                  type: int
+                  constraints:
+                    nullable: false
+              - column:
+                  name: pics
+                  type: int
+                  constraints:
+                    nullable: false
