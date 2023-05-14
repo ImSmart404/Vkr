@@ -1,6 +1,7 @@
 package com.mtuci.vkr.controller;
 
 
+import com.mtuci.vkr.model.ExtendedInfo;
 import com.mtuci.vkr.model.MainInfo;
 import com.mtuci.vkr.service.WildBerriesService;
 import lombok.RequiredArgsConstructor;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 
 @org.springframework.stereotype.Controller
 @RequestMapping("/vkr")
@@ -24,10 +26,9 @@ public class Controller {
     public ResponseEntity<List<MainInfo>> getProductsMainInfo(@RequestParam("productName") String productName, @RequestParam(value = "pages") Integer pages) throws InterruptedException, IOException {
         return ResponseEntity.ok().body(wildBerriesService.getProductsInfo(productName, pages)) ;
     }
-    @GetMapping("/getProductsAllInfo")
-    public ResponseEntity<List<MainInfo>> getProductsExtendedInfo()  throws InterruptedException, IOException {
-        return null;
-        //return ResponseEntity.ok().body(wildBerriesService.getProductsInfo(productName, pages)) ;
+    @GetMapping("/getProductExtendedInfo")
+    public ResponseEntity<Optional<ExtendedInfo>> getProductsExtendedInfo(@RequestParam("id") Long id){
+        return ResponseEntity.ok().body(wildBerriesService.getProductExtendedInfo(id));
     }
     @GetMapping
     public String home(){

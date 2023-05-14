@@ -1,9 +1,12 @@
 package com.mtuci.vkr.service;
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.mtuci.vkr.model.ExtendedInfo;
 import com.mtuci.vkr.model.MainInfo;
-import com.mtuci.vkr.repository.ProductRepository;
+import com.mtuci.vkr.repository.ExtendedInfoRepository;
+import com.mtuci.vkr.repository.MainInfoRepository;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.openqa.selenium.By;
@@ -17,6 +20,7 @@ import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.springframework.stereotype.Service;
 import java.io.BufferedReader;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
@@ -24,38 +28,85 @@ import java.net.URL;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @Slf4j
 @AllArgsConstructor
 public class WildBerriesService {
 
-    ProductRepository productRepository;
+    MainInfoRepository mainInfoRepository;
+    ExtendedInfoRepository extendedInfoRepository;
     public List<MainInfo> getProductsInfo(String request, Integer pages) throws InterruptedException, IOException {
         List<Long> idList = getId(request,pages);
         List<MainInfo> mainInfoList = getMainInfoListByProductsId(idList);
         List<ExtendedInfo> extendedInfoList = getExtendedInfoListByProductsId(idList);
-        productRepository.saveAll(mainInfoList);
+        mainInfoRepository.saveAll(mainInfoList);
+        extendedInfoRepository.saveAll(extendedInfoList);
         return mainInfoList;
     }
 
-    public List<ExtendedInfo> getProductsExtendedInfo() throws InterruptedException {
-        return null;
+    public Optional<ExtendedInfo> getProductExtendedInfo(Long id)  {
+        return extendedInfoRepository.findById(id);
     }
 
 
-    public List<ExtendedInfo> getExtendedInfoListByProductsId(List<Long> idList){
+    public List<ExtendedInfo> getExtendedInfoListByProductsId(List<Long> idList) throws IOException {
         List<ExtendedInfo> extendedInfoList = new ArrayList<>();
         List<Long> idListTemp = new ArrayList<>(idList);
         Long id = 0L;
         while (!idListTemp.isEmpty()){
             ExtendedInfo extendedInfo = new ExtendedInfo();
             id = idListTemp.get(0);
-            Long vol = Long.parseLong(Long.toString(id).substring(0, 4));
-            Long part = Long.parseLong(Long.toString(id).substring(0, 6));
-            String url = String.format("https://basket-10.wb.ru/vol%d/part%d/%d/info/ru/card.json", vol, part, id);
-            log.info(url);
-            idListTemp.remove(0);
+            String basket = "10";
+            Long vol = Long.parseLong(Long.toString(id).substring(0, 3));
+            Long part = Long.parseLong(Long.toString(id).substring(0, 5));
+            if (id / 100000000 != 0) {
+                vol = Long.parseLong(Long.toString(id).substring(0, 4));
+                part = Long.parseLong(Long.toString(id).substring(0, 6));
+            }
+
+            String url = String.format("https://basket-%s.wb.ru/vol%d/part%d/%d/info/ru/card.json", basket, vol, part, id);
+            URL obj = new URL(url);
+            HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+            con.setRequestMethod("GET");
+            con.setRequestProperty("User-Agent", "Mozilla/5.0");
+            int i = 9;
+            while (con.getResponseCode() != HttpURLConnection.HTTP_OK){
+                basket = "0" + i;
+                url = String.format("https://basket-%s.wb.ru/vol%d/part%d/%d/info/ru/card.json", basket, vol, part, id);
+                obj = new URL(url);
+                con = (HttpURLConnection) obj.openConnection();
+                con.setRequestMethod("GET");
+                con.setRequestProperty("User-Agent", "Mozilla/5.0");
+                i--;
+            }
+                BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+                String inputLine;
+                StringBuffer response = new StringBuffer();
+                while ((inputLine = in.readLine()) != null) {
+                    response.append(inputLine);
+                }
+                in.close();
+                Gson gson = new Gson();
+                JsonObject jsonObject = gson.fromJson(response.toString(), JsonObject.class);
+                extendedInfo.setId(id);
+                extendedInfo.setFullName(jsonObject.get("imt_name").getAsString());
+                extendedInfo.setSubCategory(jsonObject.get("subj_name").getAsString());
+                extendedInfo.setCategory( jsonObject.get("subj_root_name").getAsString());
+                extendedInfo.setDescription(jsonObject.get("description").getAsString());
+                JsonArray optionsArray = jsonObject.getAsJsonArray("options");
+                List<String> options = new ArrayList<>();
+                for (JsonElement element : optionsArray) {
+                    JsonObject optionObject = element.getAsJsonObject();
+                    String optionName = optionObject.get("name").getAsString();
+                    String optionValue = optionObject.get("value").getAsString();
+                    options.add(optionName + ": " + optionValue);
+                }
+                String optionsJson = gson.toJson(options);
+                extendedInfo.setOptions(optionsJson);
+                extendedInfoList.add(extendedInfo);
+                idListTemp.remove(0);
         }
         return extendedInfoList;
     }

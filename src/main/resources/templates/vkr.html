@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>Get Products</title>
+    <title>Система парсинга</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -32,12 +32,21 @@
             cursor: pointer;
         }
 
-        #tableContainer {
+        #tableContainer1 {
+            height: 300px;
+            overflow-y: auto;
+        }
+        #tableContainer2 {
             height: 300px;
             overflow-y: auto;
         }
 
         #productsTable {
+            width: 100%;
+            table-layout: fixed;
+            border-collapse: collapse;
+        }
+        #productsExtendedInfoTable{
             width: 100%;
             table-layout: fixed;
             border-collapse: collapse;
@@ -49,21 +58,33 @@
             text-align: left;
             border: 1px solid #ccc;
         }
+        #productsExtendedInfoTable thead th,
+        #productsExtendedInfoTable tbody td {
+            padding: 10px;
+            text-align: left;
+            border: 1px solid #ccc;
+        }
     </style>
 </head>
 <body>
-<h1>Get Products</h1>
+<h1>Система парсинга информации</h1>
 <form id="getProductsForm">
-    <label for="productName">Product Name:</label>
+    <label for="productName">Введите запрос для поиска:</label>
     <input type="text" id="productName" name="productName" required><br><br>
 
-    <label for="pages">Number of Pages:</label>
-    <input type="number" id="pages" name="pages" min="1" value="50"><br><br>
+    <label for="pages">Введите количество страниц которое вы хотите спарсить:</label>
+    <input type="number" id="pages" name="pages" min="1" max="50"><br><br>
 
-    <input type="submit" value="Submit">
+    <input type="submit" value="Получить информацию">
 </form>
 
-<div id="tableContainer">
+<form id="getProductsExtendedInfoForm">
+    <label for="productId">Введите Id товара для получения расширенной информации:</label>
+    <input type="text" id="productId" name="productId"><br><br>
+    <input type="submit" value="Получить больше информации о товаре">
+</form>
+
+<div id="tableContainer1">
     <table id="productsTable">
         <thead>
         <tr>
@@ -76,6 +97,23 @@
         </tr>
         </thead>
         <tbody id="productsBody"></tbody>
+    </table>
+</div>
+
+<div id="tableContainer2">
+</table>
+    <table id="productsExtendedInfoTable">
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>FullName</th>
+            <th>Category</th>
+            <th>SubCategory</th>
+            <th>Options</th>
+            <th>Description</th>
+        </tr>
+        </thead>
+        <tbody id="productsExtendedInfoBody"></tbody>
     </table>
 </div>
 
@@ -94,10 +132,7 @@
             })
                 .then(response => response.json())
                 .then(data => {
-                    // Очищаем содержимое таблицы
                     var tableBody = document.getElementById('productsBody');
-                    tableBody.innerHTML = '';
-
                     // Добавляем данные в таблицу
                     data.forEach(function(mainInfo) {
                         var row = document.createElement('tr');
@@ -127,6 +162,56 @@
 
                         tableBody.appendChild(row);
                     });
+                })
+                .catch(error => {
+                    // Обработка ошибок
+                    console.log(error);
+                });
+        });
+    });
+    document.addEventListener('DOMContentLoaded', function() {
+        document.getElementById('getProductsExtendedInfoForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            var productId = document.getElementById('productId').value;
+            var url = '/vkr/getProductExtendedInfo?id=' + encodeURIComponent(productId);
+
+            fetch(url, {
+                method: 'GET'
+            })
+                .then(response => response.json())
+                .then(data => {
+                    // Очищаем содержимое таблицы
+                    var tableBody = document.getElementById('productsExtendedInfoBody');
+                    tableBody.innerHTML = '';
+
+                    // Добавляем данные в таблицу
+                    var extendedInfo = data;
+                    var row = document.createElement('tr');
+
+                    var idCell = document.createElement('td');
+                    idCell.textContent = extendedInfo.id;
+                    row.appendChild(idCell);
+
+                    var fullNameCell = document.createElement('td');
+                    fullNameCell.textContent = extendedInfo.fullName;
+                    row.appendChild(fullNameCell);
+
+                    var categoryCell = document.createElement('td');
+                    categoryCell.textContent = extendedInfo.category;
+                    row.appendChild(categoryCell);
+
+                    var subCategoryCell = document.createElement('td');
+                    subCategoryCell.textContent = extendedInfo.subCategory;
+                    row.appendChild(subCategoryCell);
+
+                    var optionsCell = document.createElement('td');
+                    optionsCell.textContent = extendedInfo.options;
+                    row.appendChild(optionsCell);
+
+                    var descriptionCell = document.createElement('td');
+                    descriptionCell.textContent = extendedInfo.description;
+                    row.appendChild(descriptionCell);
+                    tableBody.appendChild(row);
                 })
                 .catch(error => {
                     // Обработка ошибок
