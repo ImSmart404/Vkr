@@ -110,6 +110,7 @@
             <th>Category</th>
             <th>SubCategory</th>
             <th>Options</th>
+            <th>PriceHistory</th>
             <th>Description</th>
         </tr>
         </thead>
@@ -207,6 +208,12 @@
                     var optionsCell = document.createElement('td');
                     optionsCell.textContent = extendedInfo.options;
                     row.appendChild(optionsCell);
+
+                    var priceHistoryCell = document.createElement('td');
+                    priceHistoryCell.textContent = extendedInfo.priceHistory.map(function(price) {
+                        return price.price;
+                    }).join(', ');
+                    row.appendChild(priceHistoryCell);
 
                     var descriptionCell = document.createElement('td');
                     descriptionCell.textContent = extendedInfo.description;

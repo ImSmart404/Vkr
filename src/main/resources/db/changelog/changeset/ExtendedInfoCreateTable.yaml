@@ -34,6 +34,13 @@ databaseChangeLog:
                   constraints:
                     nullable: false
               - column:
+                  name: price_history_id
+                  type: bigint
+                  constraints:
+                    foreignKey:
+                        name: extended_info_price_history_fk
+                        references: price_history (productId)
+              - column:
                   name: description
                   type: text
                   constraints:

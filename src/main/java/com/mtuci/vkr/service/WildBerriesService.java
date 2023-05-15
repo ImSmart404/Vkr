@@ -5,8 +5,10 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.mtuci.vkr.model.ExtendedInfo;
 import com.mtuci.vkr.model.MainInfo;
+import com.mtuci.vkr.model.PriceHistory;
 import com.mtuci.vkr.repository.ExtendedInfoRepository;
 import com.mtuci.vkr.repository.MainInfoRepository;
+import com.mtuci.vkr.repository.PriceHistoryRepository;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.openqa.selenium.By;
@@ -37,12 +39,19 @@ public class WildBerriesService {
 
     MainInfoRepository mainInfoRepository;
     ExtendedInfoRepository extendedInfoRepository;
+
+    PriceHistoryRepository priceHistoryRepository;
     public List<MainInfo> getProductsInfo(String request, Integer pages) throws InterruptedException, IOException {
         List<Long> idList = getId(request,pages);
         List<MainInfo> mainInfoList = getMainInfoListByProductsId(idList);
-        List<ExtendedInfo> extendedInfoList = getExtendedInfoListByProductsId(idList);
         mainInfoRepository.saveAll(mainInfoList);
-        extendedInfoRepository.saveAll(extendedInfoList);
+        List<ExtendedInfo> extendedInfoList = getExtendedInfoListByProductsId(idList);
+
+        for (ExtendedInfo extendedInfo : extendedInfoList) {
+            List<PriceHistory> priceHistoryList = priceHistoryRepository.findByProductId(extendedInfo.getId());
+            extendedInfo.setPriceHistory(priceHistoryList);
+            extendedInfoRepository.save(extendedInfo);
+        }
         return mainInfoList;
     }
 
@@ -56,7 +65,9 @@ public class WildBerriesService {
         List<Long> idListTemp = new ArrayList<>(idList);
         Long id = 0L;
         while (!idListTemp.isEmpty()){
+            List<PriceHistory> priceHistoryList = new ArrayList<>();
             ExtendedInfo extendedInfo = new ExtendedInfo();
+
             id = idListTemp.get(0);
             String basket = "10";
             Long vol = Long.parseLong(Long.toString(id).substring(0, 3));
@@ -66,36 +77,82 @@ public class WildBerriesService {
                 part = Long.parseLong(Long.toString(id).substring(0, 6));
             }
 
-            String url = String.format("https://basket-%s.wb.ru/vol%d/part%d/%d/info/ru/card.json", basket, vol, part, id);
-            URL obj = new URL(url);
-            HttpURLConnection con = (HttpURLConnection) obj.openConnection();
-            con.setRequestMethod("GET");
-            con.setRequestProperty("User-Agent", "Mozilla/5.0");
+            String urlForExtendedInfo = String.format("https://basket-%s.wb.ru/vol%d/part%d/%d/info/ru/card.json", basket, vol, part, id);
+            URL objForExtendedInfo = new URL(urlForExtendedInfo);
+
+            HttpURLConnection conForExtendedInfo = (HttpURLConnection) objForExtendedInfo.openConnection();
+
+            conForExtendedInfo.setRequestMethod("GET");
+            conForExtendedInfo.setRequestProperty("User-Agent", "Mozilla/5.0");
+
             int i = 9;
-            while (con.getResponseCode() != HttpURLConnection.HTTP_OK){
+            while (conForExtendedInfo.getResponseCode() != HttpURLConnection.HTTP_OK){
                 basket = "0" + i;
-                url = String.format("https://basket-%s.wb.ru/vol%d/part%d/%d/info/ru/card.json", basket, vol, part, id);
-                obj = new URL(url);
-                con = (HttpURLConnection) obj.openConnection();
-                con.setRequestMethod("GET");
-                con.setRequestProperty("User-Agent", "Mozilla/5.0");
+                urlForExtendedInfo = String.format("https://basket-%s.wb.ru/vol%d/part%d/%d/info/ru/card.json", basket, vol, part, id);
+                objForExtendedInfo = new URL(urlForExtendedInfo);
+                conForExtendedInfo = (HttpURLConnection) objForExtendedInfo.openConnection();
+                conForExtendedInfo.setRequestMethod("GET");
+                conForExtendedInfo.setRequestProperty("User-Agent", "Mozilla/5.0");
                 i--;
             }
-                BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
-                String inputLine;
-                StringBuffer response = new StringBuffer();
-                while ((inputLine = in.readLine()) != null) {
-                    response.append(inputLine);
+
+                String urlForPriceHistory = String.format("https://basket-%s.wb.ru/vol%d/part%d/%d/info/price-history.json", basket, vol, part, id);
+                URL objForPriceHistory = new URL(urlForPriceHistory);
+                HttpURLConnection conForPriceHistory = (HttpURLConnection) objForPriceHistory.openConnection();
+                conForPriceHistory.setRequestMethod("GET");
+                conForPriceHistory.setRequestProperty("User-Agent", "Mozilla/5.0");
+
+
+                BufferedReader inForExtendedInfo = new BufferedReader(new InputStreamReader(conForExtendedInfo.getInputStream()));
+                String inputLineForExtendedInfo;
+                StringBuffer responseForExtendedInfo = new StringBuffer();
+                while ((inputLineForExtendedInfo  = inForExtendedInfo.readLine()) != null) {
+                    responseForExtendedInfo.append(inputLineForExtendedInfo );
                 }
-                in.close();
-                Gson gson = new Gson();
-                JsonObject jsonObject = gson.fromJson(response.toString(), JsonObject.class);
+
+                BufferedReader inForPriceHistory;
+                try{
+                    inForPriceHistory = new BufferedReader(new InputStreamReader(conForPriceHistory.getInputStream()));
+                    String inputLineForPriceHistory;
+                    StringBuilder responseForPriceHistory = new StringBuilder();
+                    while ((inputLineForPriceHistory  = inForPriceHistory.readLine()) != null) {
+                        responseForPriceHistory.append(inputLineForPriceHistory );
+                    }
+                    Gson gsonForPriceHistory = new Gson();
+                    JsonArray jsonArrayForPriceHistory = gsonForPriceHistory.fromJson(responseForPriceHistory.toString(), JsonArray.class);
+                    for (JsonElement element : jsonArrayForPriceHistory) {
+                        PriceHistory priceHistory = new PriceHistory();
+                        JsonObject itemObject = element.getAsJsonObject();
+                        JsonObject priceObject = itemObject.getAsJsonObject("price");
+                        if (priceObject != null && priceObject.has("RUB")) {
+                            Integer price = priceObject.get("RUB").getAsInt();
+                            priceHistory.setProductId(id);
+                            priceHistory.setPrice(price/100);
+                            priceHistoryList.add(priceHistory);
+                        }
+                    }
+                    inForPriceHistory.close();
+                } catch (FileNotFoundException ex ){
+                    PriceHistory priceHistory = new PriceHistory();
+                    priceHistory.setProductId(id);
+                    priceHistory.setPrice(12);
+                    priceHistoryList.add(priceHistory);
+                    log.warn(ex.getMessage());
+                }
+                inForExtendedInfo.close();
+                Gson gsonForExtendedInfo = new Gson();
+                JsonObject jsonObjectForExtendedInfo  = gsonForExtendedInfo.fromJson(responseForExtendedInfo.toString(), JsonObject.class);
                 extendedInfo.setId(id);
-                extendedInfo.setFullName(jsonObject.get("imt_name").getAsString());
-                extendedInfo.setSubCategory(jsonObject.get("subj_name").getAsString());
-                extendedInfo.setCategory( jsonObject.get("subj_root_name").getAsString());
-                extendedInfo.setDescription(jsonObject.get("description").getAsString());
-                JsonArray optionsArray = jsonObject.getAsJsonArray("options");
+                extendedInfo.setFullName(jsonObjectForExtendedInfo.get("imt_name").getAsString());
+                extendedInfo.setSubCategory(jsonObjectForExtendedInfo.get("subj_name").getAsString());
+                extendedInfo.setCategory( jsonObjectForExtendedInfo.get("subj_root_name").getAsString());
+                try {
+                    extendedInfo.setDescription(jsonObjectForExtendedInfo.get("description").getAsString());
+                } catch (Exception ex){
+                    log.info(ex.getMessage());
+                }
+
+                JsonArray optionsArray = jsonObjectForExtendedInfo .getAsJsonArray("options");
                 List<String> options = new ArrayList<>();
                 for (JsonElement element : optionsArray) {
                     JsonObject optionObject = element.getAsJsonObject();
@@ -103,9 +160,13 @@ public class WildBerriesService {
                     String optionValue = optionObject.get("value").getAsString();
                     options.add(optionName + ": " + optionValue);
                 }
-                String optionsJson = gson.toJson(options);
+                String optionsJson = gsonForExtendedInfo.toJson(options);
+                if(priceHistoryRepository.findByProductId(id).isEmpty()){
+                    priceHistoryRepository.saveAll(priceHistoryList);
+                }
                 extendedInfo.setOptions(optionsJson);
                 extendedInfoList.add(extendedInfo);
+
                 idListTemp.remove(0);
         }
         return extendedInfoList;

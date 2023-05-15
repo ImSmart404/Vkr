@@ -1,0 +1,25 @@
+databaseChangeLog:
+  - changeSet:
+      id: createPriceHistoryTable
+      author: Mikhail
+      changes:
+        - createTable:
+            tableName: price_history
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: product_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+              - column:
+                  name: price
+                  type: bigint
+                  constraints:
+                    nullable: true

@@ -3,3 +3,5 @@ databaseChangeLog:
         file: db/changelog/changeset/MainInfoCreateTable.yaml
   - include:
       file: db/changelog/changeset/ExtendedInfoCreateTable.yaml
+  - include:
+      file: db/changelog/changeset/PriceHistoryCreateTable.yaml
