@@ -56,11 +56,13 @@
         #productsTable tbody td {
             padding: 10px;
             text-align: left;
+            vertical-align: top;
             border: 1px solid #ccc;
         }
         #productsExtendedInfoTable thead th,
         #productsExtendedInfoTable tbody td {
             padding: 10px;
+            vertical-align: top;
             text-align: left;
             border: 1px solid #ccc;
         }
@@ -125,7 +127,9 @@
 
             var productName = document.getElementById('productName').value;
             var pages = document.getElementById('pages').value;
-
+            if (pages === '') {
+                pages = 50;
+            }
             var url = '/vkr/getProductsMainInfo?productName=' + encodeURIComponent(productName) + '&pages=' + encodeURIComponent(pages);
 
             fetch(url, {

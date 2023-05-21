@@ -10,6 +10,7 @@ public class PriceHistory {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
+    @Column(name = "product_id")
     private Long productId;
 
     private Integer price;

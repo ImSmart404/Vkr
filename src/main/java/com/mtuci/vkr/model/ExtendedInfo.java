@@ -3,6 +3,7 @@ package com.mtuci.vkr.model;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -14,8 +15,8 @@ public class ExtendedInfo {
     private String category;
     private String subCategory;
     private String options;
-    @OneToMany(fetch = FetchType.LAZY)
-    @JoinColumn(name = "productId", referencedColumnName = "id")
-    private List<PriceHistory>  priceHistory;
+    @OneToMany
+    @JoinColumn(name = "product_id")
+    private List<PriceHistory>  priceHistory = new ArrayList<>();
     private String description;
 }

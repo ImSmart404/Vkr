@@ -50,12 +50,14 @@ public class WildBerriesService {
         for (ExtendedInfo extendedInfo : extendedInfoList) {
             List<PriceHistory> priceHistoryList = priceHistoryRepository.findByProductId(extendedInfo.getId());
             extendedInfo.setPriceHistory(priceHistoryList);
+            log.info(extendedInfo.toString());
             extendedInfoRepository.save(extendedInfo);
         }
         return mainInfoList;
     }
 
     public Optional<ExtendedInfo> getProductExtendedInfo(Long id)  {
+
         return extendedInfoRepository.findById(id);
     }
 
@@ -67,11 +69,14 @@ public class WildBerriesService {
         while (!idListTemp.isEmpty()){
             List<PriceHistory> priceHistoryList = new ArrayList<>();
             ExtendedInfo extendedInfo = new ExtendedInfo();
-
             id = idListTemp.get(0);
             String basket = "10";
-            Long vol = Long.parseLong(Long.toString(id).substring(0, 3));
-            Long part = Long.parseLong(Long.toString(id).substring(0, 5));
+            Long vol = Long.parseLong(Long.toString(id).substring(0, 2));
+            Long part = Long.parseLong(Long.toString(id).substring(0, 4));
+            if (id/10000000 !=0){
+                vol = Long.parseLong(Long.toString(id).substring(0, 3));
+                part = Long.parseLong(Long.toString(id).substring(0, 5));
+            }
             if (id / 100000000 != 0) {
                 vol = Long.parseLong(Long.toString(id).substring(0, 4));
                 part = Long.parseLong(Long.toString(id).substring(0, 6));
@@ -85,14 +90,19 @@ public class WildBerriesService {
             conForExtendedInfo.setRequestMethod("GET");
             conForExtendedInfo.setRequestProperty("User-Agent", "Mozilla/5.0");
 
-            int i = 9;
+            int i = 11;
             while (conForExtendedInfo.getResponseCode() != HttpURLConnection.HTTP_OK){
-                basket = "0" + i;
+                if(i>9){
+                    basket =String.valueOf(i);
+                } else {
+                    basket = "0" + i;
+                }
                 urlForExtendedInfo = String.format("https://basket-%s.wb.ru/vol%d/part%d/%d/info/ru/card.json", basket, vol, part, id);
                 objForExtendedInfo = new URL(urlForExtendedInfo);
                 conForExtendedInfo = (HttpURLConnection) objForExtendedInfo.openConnection();
                 conForExtendedInfo.setRequestMethod("GET");
                 conForExtendedInfo.setRequestProperty("User-Agent", "Mozilla/5.0");
+                log.info(urlForExtendedInfo);
                 i--;
             }
 
@@ -111,42 +121,16 @@ public class WildBerriesService {
                 }
 
                 BufferedReader inForPriceHistory;
-                try{
-                    inForPriceHistory = new BufferedReader(new InputStreamReader(conForPriceHistory.getInputStream()));
-                    String inputLineForPriceHistory;
-                    StringBuilder responseForPriceHistory = new StringBuilder();
-                    while ((inputLineForPriceHistory  = inForPriceHistory.readLine()) != null) {
-                        responseForPriceHistory.append(inputLineForPriceHistory );
-                    }
-                    Gson gsonForPriceHistory = new Gson();
-                    JsonArray jsonArrayForPriceHistory = gsonForPriceHistory.fromJson(responseForPriceHistory.toString(), JsonArray.class);
-                    for (JsonElement element : jsonArrayForPriceHistory) {
-                        PriceHistory priceHistory = new PriceHistory();
-                        JsonObject itemObject = element.getAsJsonObject();
-                        JsonObject priceObject = itemObject.getAsJsonObject("price");
-                        if (priceObject != null && priceObject.has("RUB")) {
-                            Integer price = priceObject.get("RUB").getAsInt();
-                            priceHistory.setProductId(id);
-                            priceHistory.setPrice(price/100);
-                            priceHistoryList.add(priceHistory);
-                        }
-                    }
-                    inForPriceHistory.close();
-                } catch (FileNotFoundException ex ){
-                    PriceHistory priceHistory = new PriceHistory();
-                    priceHistory.setProductId(id);
-                    priceHistory.setPrice(12);
-                    priceHistoryList.add(priceHistory);
-                    log.warn(ex.getMessage());
-                }
+
                 inForExtendedInfo.close();
                 Gson gsonForExtendedInfo = new Gson();
                 JsonObject jsonObjectForExtendedInfo  = gsonForExtendedInfo.fromJson(responseForExtendedInfo.toString(), JsonObject.class);
+                try {
                 extendedInfo.setId(id);
                 extendedInfo.setFullName(jsonObjectForExtendedInfo.get("imt_name").getAsString());
                 extendedInfo.setSubCategory(jsonObjectForExtendedInfo.get("subj_name").getAsString());
                 extendedInfo.setCategory( jsonObjectForExtendedInfo.get("subj_root_name").getAsString());
-                try {
+
                     extendedInfo.setDescription(jsonObjectForExtendedInfo.get("description").getAsString());
                 } catch (Exception ex){
                     log.info(ex.getMessage());
@@ -161,10 +145,44 @@ public class WildBerriesService {
                     options.add(optionName + ": " + optionValue);
                 }
                 String optionsJson = gsonForExtendedInfo.toJson(options);
-                if(priceHistoryRepository.findByProductId(id).isEmpty()){
-                    priceHistoryRepository.saveAll(priceHistoryList);
-                }
+
                 extendedInfo.setOptions(optionsJson);
+
+
+            try{
+                inForPriceHistory = new BufferedReader(new InputStreamReader(conForPriceHistory.getInputStream()));
+                String inputLineForPriceHistory;
+                StringBuilder responseForPriceHistory = new StringBuilder();
+                while ((inputLineForPriceHistory  = inForPriceHistory.readLine()) != null) {
+                    responseForPriceHistory.append(inputLineForPriceHistory );
+                }
+                Gson gsonForPriceHistory = new Gson();
+                JsonArray jsonArrayForPriceHistory = gsonForPriceHistory.fromJson(responseForPriceHistory.toString(), JsonArray.class);
+                for (JsonElement element : jsonArrayForPriceHistory) {
+                    PriceHistory priceHistory = new PriceHistory();
+                    JsonObject itemObject = element.getAsJsonObject();
+                    JsonObject priceObject = itemObject.getAsJsonObject("price");
+                    if (priceObject != null && priceObject.has("RUB")) {
+                        Integer price = priceObject.get("RUB").getAsInt();
+                        priceHistory.setProductId(id);
+                        priceHistory.setPrice(price/100);
+                        priceHistoryList.add(priceHistory);
+                    }
+                }
+
+                inForPriceHistory.close();
+            } catch (FileNotFoundException ex ){
+                PriceHistory priceHistory = new PriceHistory();
+                priceHistory.setProductId(id);
+                priceHistory.setPrice(0);
+                priceHistoryList.add(priceHistory);
+                log.warn(ex.getMessage());
+            }
+            if(priceHistoryRepository.findByProductId(extendedInfo.getId()).isEmpty()){
+                priceHistoryRepository.saveAll(priceHistoryList);
+            }
+
+
                 extendedInfoList.add(extendedInfo);
 
                 idListTemp.remove(0);
