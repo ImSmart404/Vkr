@@ -3,130 +3,85 @@
 <head>
     <meta charset="UTF-8">
     <title>Система парсинга</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-        }
-
-        h1 {
-            margin-bottom: 20px;
-        }
-
-        form {
-            margin-bottom: 20px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 5px;
-        }
-
-        input[type="text"],
-        input[type="number"],
-        input[type="submit"] {
-            padding: 5px;
-        }
-
-        input[type="submit"] {
-            cursor: pointer;
-        }
-
-        #tableContainer1 {
-            height: 300px;
-            overflow-y: auto;
-        }
-        #tableContainer2 {
-            height: 300px;
-            overflow-y: auto;
-        }
-
-        #productsTable {
-            width: 100%;
-            table-layout: fixed;
-            border-collapse: collapse;
-        }
-        #productsExtendedInfoTable{
-            width: 100%;
-            table-layout: fixed;
-            border-collapse: collapse;
-        }
-
-        #productsTable thead th,
-        #productsTable tbody td {
-            padding: 10px;
-            text-align: left;
-            vertical-align: top;
-            border: 1px solid #ccc;
-        }
-        #productsExtendedInfoTable thead th,
-        #productsExtendedInfoTable tbody td {
-            padding: 10px;
-            vertical-align: top;
-            text-align: left;
-            border: 1px solid #ccc;
-        }
-    </style>
+    <link rel="stylesheet" th:href="@{/WildBerriesStyles.css}">
 </head>
 <body>
-<h1>Система парсинга информации</h1>
-<form id="getProductsForm">
-    <label for="productName">Введите запрос для поиска:</label>
-    <input type="text" id="productName" name="productName" required><br><br>
-
-    <label for="pages">Введите количество страниц которое вы хотите спарсить:</label>
-    <input type="number" id="pages" name="pages" min="1" max="50"><br><br>
-
-    <input type="submit" value="Получить информацию">
-</form>
-
-<form id="getProductsExtendedInfoForm">
-    <label for="productId">Введите Id товара для получения расширенной информации:</label>
-    <input type="text" id="productId" name="productId"><br><br>
-    <input type="submit" value="Получить больше информации о товаре">
-</form>
-
-<div id="tableContainer1">
-    <table id="productsTable">
-        <thead>
-        <tr>
-            <th>ID</th>
-            <th>Price</th>
-            <th>Sale Price</th>
-            <th>Rating</th>
-            <th>Brand</th>
-            <th>Pictures</th>
-        </tr>
-        </thead>
-        <tbody id="productsBody"></tbody>
-    </table>
-</div>
-
-<div id="tableContainer2">
-</table>
-    <table id="productsExtendedInfoTable">
-        <thead>
-        <tr>
-            <th>ID</th>
-            <th>FullName</th>
-            <th>Category</th>
-            <th>SubCategory</th>
-            <th>Options</th>
-            <th>PriceHistory</th>
-            <th>Description</th>
-        </tr>
-        </thead>
-        <tbody id="productsExtendedInfoBody"></tbody>
-    </table>
+<div class="desktop-2">
+    <p class="hlps">HLPS</p>
+    <div class="frame-5">
+        <p class="menu">
+            <a class="menu-link" href="/vkr/home">Главная</a>
+        </p>
+        <p class="menu">Контакты</p>
+        <p class="menu">WildBerries</p>
+        <p class="menu">О проекте</p>
+    </div>
+    <div class="line-1"></div>
+    <div class="frame-1">
+        <p class="header2">
+            Введите запрос для поиска:
+        </p>
+        <input type="text" class="rectanglefortext">
+        <p class="header2">
+            Введите количество страниц:
+        </p>
+        <div class="slider-container">
+            <input type="range" class="slider" min="1" max="50" value="1" oninput="updateSliderValue(this.value)">
+            <div id="slider-value" class="slider-value">1</div>
+        </div>
+        <div class = "get button">
+            <button id="getProductsMainInfoButton">Получить основную информацию</button>
+        </div>
+        <div class="table-container">
+            <table id="productsTable" class="table">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Price</th>
+                    <th>Sale Price</th>
+                    <th>Rating</th>
+                    <th>Brand</th>
+                    <th>Pictures</th>
+                </tr>
+                </thead>
+                <tbody id="productsBody"></tbody>
+            </table>
+        </div>
+        <p class="header2">
+            Введите Id товара для получения расширенной информации:
+        </p>
+        <input type="text" class="rectanglefortext">
+        <div class="get button">
+            <button id="getProductExtendedInfoButton">Получить расширенную информацию</button>
+        </div>
+        <div class="table-container">
+            <table id="productsExtendedInfoTable" class="table">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>FullName</th>
+                    <th>Category</th>
+                    <th>SubCategory</th>
+                    <th>Options</th>
+                    <th>PriceHistory</th>
+                    <th>Description</th>
+                </tr>
+                </thead>
+                <tbody id="productsExtendedInfoBody"></tbody>
+            </table>
+        </div>
+    </div>
 </div>
 
 <script>
+    function updateSliderValue(value) {
+        var sliderValueElement = document.getElementById("slider-value");
+        sliderValueElement.textContent = value;
+    }
     document.addEventListener('DOMContentLoaded', function() {
-        document.getElementById('getProductsForm').addEventListener('submit', function(event) {
-            event.preventDefault(); // Предотвращаем отправку формы по умолчанию
-
-            var productName = document.getElementById('productName').value;
-            var pages = document.getElementById('pages').value;
+        document.getElementById('getProductsMainInfoButton').addEventListener('click', function() {
+            var productName = document.querySelector('.rectanglefortext').value;
+            var pages = document.getElementById('slider-value').textContent;
             if (pages === '') {
                 pages = 50;
             }
@@ -138,6 +93,9 @@
                 .then(response => response.json())
                 .then(data => {
                     var tableBody = document.getElementById('productsBody');
+                    // Очищаем содержимое таблицы
+                    tableBody.innerHTML = '';
+
                     // Добавляем данные в таблицу
                     data.forEach(function(mainInfo) {
                         var row = document.createElement('tr');
@@ -157,6 +115,7 @@
                         var ratingCell = document.createElement('td');
                         ratingCell.textContent = mainInfo.rating;
                         row.appendChild(ratingCell);
+
                         var brandCell = document.createElement('td');
                         brandCell.textContent = mainInfo.brand;
                         row.appendChild(brandCell);
@@ -173,11 +132,9 @@
                     console.log(error);
                 });
         });
-    });
-    document.addEventListener('DOMContentLoaded', function() {
-        document.getElementById('getProductsExtendedInfoForm').addEventListener('submit', function(event) {
-            event.preventDefault();
-            var productId = document.getElementById('productId').value;
+
+        document.getElementById('getProductExtendedInfoButton').addEventListener('click', function() {
+            var productId = document.querySelector('.rectanglefortext:last-of-type').value;
             var url = '/vkr/getProductExtendedInfo?id=' + encodeURIComponent(productId);
 
             fetch(url, {
@@ -185,8 +142,8 @@
             })
                 .then(response => response.json())
                 .then(data => {
-                    // Очищаем содержимое таблицы
                     var tableBody = document.getElementById('productsExtendedInfoBody');
+                    // Очищаем содержимое таблицы
                     tableBody.innerHTML = '';
 
                     // Добавляем данные в таблицу
@@ -222,6 +179,7 @@
                     var descriptionCell = document.createElement('td');
                     descriptionCell.textContent = extendedInfo.description;
                     row.appendChild(descriptionCell);
+
                     tableBody.appendChild(row);
                 })
                 .catch(error => {

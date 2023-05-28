@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Система парсинга</title>
+    <link rel="stylesheet" th:href="@{/HomeStyles.css?v=123456}">
+</head>
+<body>
+<div class="desktop-1" id="main">
+    <p class="hlps">HLPS</p>
+    <div class="line-1"></div>
+    <div class="frame-5">
+        <p class="menu">
+            <a class="menu-link" href="#main">Главная</a>
+        </p>
+        <p class="menu">
+            <a class="menu-link" href="#form_message">Контакты</a>
+        </p>
+        <p class="menu">
+            <a class="menu-link" href="#services">Услуги</a>
+        </p>
+        <p class="menu">О проекте</p>
+    </div>
+    <div class="frame-6">
+        <p class="header1">
+            Система парсинга важной информации
+        </p>
+        <p class="header2">
+            Простой и интуитивно понятный сбор информации
+        </p>
+        <img
+                alt=""
+                class="example"
+                src="https://static.overlay-tech.com/assets/7a0c8767-2c26-41cc-b200-b8752c54e6b2.png"
+        />
+        <div class="line-1"></div>
+        <p class="header1">Услуги</p>
+    </div>
+    <div class="frame-2" id="services">
+        <div class="frame-1">
+            <p class="headerforcompany">WildBerries</p>
+            <div class="flex-wrapper">
+                <img alt="" class="companypictures" src="https://static.overlay-tech.com/assets/46f41d8d-1373-463b-b723-130321afb4a4.png">
+                <div class="flex-content">
+                    <p class="text">Сбор данных с крупнейшей торговой площадки WildBerries</p>
+                    <a href="/vkr/wildberries" class="perejti">Перейти</a>
+                </div>
+            </div>
+        </div>
+        <div class="frame-1">
+            <p class="headerforcompany">Яндекс маркет</p>
+            <div class="flex-wrapper">
+                <img alt="" class="companypictures" src="https://static.overlay-tech.com/assets/9effb0c3-a189-4e60-87d5-9d3a357ce466.png">
+                <div class="flex-content">
+                    <p class="text">Получите важные данные с площадки Яндекс Маркет</p>
+                    <p class="perejti">Перейти</p>
+                </div>
+            </div>
+        </div>
+        <div class="frame-1">
+            <p class="headerforcompany">Ozon</p>
+            <div class="flex-wrapper">
+                <img alt="" class="companypictures" src="https://static.overlay-tech.com/assets/f8b2e1c9-cb3d-42bb-90e0-9547b890c44a.png">
+                <div class="flex-content">
+                    <p class="text">Данный сервис предназначен для парсинга торговой площадки Ozon</p>
+                    <p class="perejti">Перейти</p>
+                </div>
+            </div>
+        </div>
+        <div class="frame-1">
+            <p class="headerforcompany">Avito</p>
+            <div class="flex-wrapper">
+                <img alt="" class="companypictures" src="https://sun9-20.userapi.com/impg/HYmW70TUWo__omF8pWnE3BANUqE4PqMBAGW_4g/fyn6_twG7lU.jpg?size=900x950&quality=95&sign=d0f1f07cac3b8484041437278f2448c6&c_uniq_tag=JW4l5kPjU39iIUyLE41huPQvcoqzOXpRwN1SLOfbcoA&type=album">
+                <div class="flex-content">
+                    <p class="text">Возможность обработать нужную информацию с доски объявлений Avito</p>
+                    <p class="perejti">Перейти</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="line-1"></div>
+    <form name="form" id="form_message">
+        <h2>Форма обратной связи.</h2>
+        <p> <div class="titles">Ваше имя*</div> <input class="input" name="name" type="text" required /> </p>
+
+        <p> <div class="titles">Электронная почта*</div> <input class="input" name="email" type="text" required /> </p>
+
+        <p> <div class="titles">Тема сообщения</div> <input class="input" name="subjects" type="text"/> </p>
+
+        <p> <div class="titles">Текст сообщения*:</div><textarea name="message" cols="22" rows="5" required></textarea></p>
+        <p> <input id="submit" value="Отправить" type="submit" /></p>
+    </form>
+    <div id="thankYouMessage" style="display: none;">
+        <p>Спасибо за ваше обращение! Ответ в скором времени поступит на указанную почту</p>
+    </div>
+    <div class="line-1"></div>
+</div>
+</div>
+<script>
+    document.getElementById('form_message').addEventListener('submit', function(event) {
+        event.preventDefault(); // Предотвращаем отправку формы
+        showThankYouMessage();
+    });
+
+    function showThankYouMessage() {
+        document.getElementById('form_message').style.display = 'none';
+        document.getElementById('thankYouMessage').style.display = 'block';
+        setTimeout(function() {
+            document.getElementById('form_message').style.display = 'block';
+            document.getElementById('thankYouMessage').style.display = 'none';
+        }, 10000); // После 10 секунд форма появится, а сообщение исчезнет
+    }
+</script>
+</body>
+<footer>
+    <p>Электронная почта: mishamikhaylov2019@mail.ru</p>
+    <p>Номер телефона: +7(977)2500958</p>
+    <p>© Система парсинга значимой информации, 2023</p>
+</footer>
+</html>

@@ -9,5 +9,5 @@ spring:
     h2:
         console:
             enabled: true
-
-
+    resources:
+        static-locations: classpath:/static/

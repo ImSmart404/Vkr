@@ -30,8 +30,13 @@ public class Controller {
     public ResponseEntity<Optional<ExtendedInfo>> getProductsExtendedInfo(@RequestParam("id") Long id){
         return ResponseEntity.ok().body(wildBerriesService.getProductExtendedInfo(id));
     }
-    @GetMapping
+    @GetMapping("/home")
     public String home(){
-        return "vkr";
+        return "Home";
+    }
+
+    @GetMapping("/wildberries")
+    public String wildberries(){
+        return "WildBerries";
     }
 }
