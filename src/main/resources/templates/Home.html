@@ -82,11 +82,8 @@
     <form name="form" id="form_message">
         <h2>Форма обратной связи.</h2>
         <p> <div class="titles">Ваше имя*</div> <input class="input" name="name" type="text" required /> </p>
-
         <p> <div class="titles">Электронная почта*</div> <input class="input" name="email" type="text" required /> </p>
-
-        <p> <div class="titles">Тема сообщения</div> <input class="input" name="subjects" type="text"/> </p>
-
+        <p> <div class="titles">Тема сообщения</div> <input class="input" name="title" type="text"/> </p>
         <p> <div class="titles">Текст сообщения*:</div><textarea name="message" cols="22" rows="5" required></textarea></p>
         <p> <input id="submit" value="Отправить" type="submit" /></p>
     </form>
@@ -96,10 +93,31 @@
     <div class="line-1"></div>
 </div>
 </div>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+<script type="text/javascript">
+    (function() {
+        emailjs.init('3Hda8RXLbpFbMbJSw');
+    })();
+</script>
 <script>
+
     document.getElementById('form_message').addEventListener('submit', function(event) {
-        event.preventDefault(); // Предотвращаем отправку формы
-        showThankYouMessage();
+        event.preventDefault();
+        var formData = new FormData(this);
+
+        var templateParams = {
+            name: formData.get("name"),
+            email: formData.get("email"),
+            title: formData.get("title"),
+            message: formData.get("message")
+        };
+        emailjs.send('service_qk9r1hv', 'template_1qgngyu', templateParams)
+            .then(function(response) {
+                console.log('Email sent successfully:', response.text);
+                showThankYouMessage();
+            }, function(error) {
+                console.error('Error sending email:', error);
+            });
     });
 
     function showThankYouMessage() {
@@ -108,7 +126,7 @@
         setTimeout(function() {
             document.getElementById('form_message').style.display = 'block';
             document.getElementById('thankYouMessage').style.display = 'none';
-        }, 10000); // После 10 секунд форма появится, а сообщение исчезнет
+        }, 10000);
     }
 </script>
 </body>

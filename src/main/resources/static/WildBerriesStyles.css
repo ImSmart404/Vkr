@@ -162,23 +162,57 @@
     position: relative;
 }
 
-.get button {
-    width: 100%;
-    height: 8vh;
+.table-button {
     background-color: darkgray;
     border: none;
     border-radius: 60px;
     color: black;
     font-family: "Inter";
-    font-size: 3vh;
     font-weight: 600;
     line-height: 4vh;
     cursor: pointer;
     margin-bottom: 5vh;
     padding: 1vh 1vh;
     position: relative;
+    text-align: center;
+}
+.button-container {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+    align-items: center;
 }
 .companypictures {
     width: 25vw;
     height: 25vw;
+}
+.option-text {
+    display: none;
+}
+.option-div button {
+    width: auto;
+    font-family: "Inter";
+    font-size: 18px;
+    padding: 5px 25px;
+    border-radius: 20px;
+    background-color: gray;
+    border: none;
+    cursor: pointer;
+    margin-top: 15px;
+}
+.option-div {
+    padding-left: 10px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+.option-div.expanded .option-text {
+    display: block;
+}
+.button-style {
+    border: none;
+    outline: none;
+    background-color: transparent;
+    cursor: pointer;
 }

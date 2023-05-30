@@ -11,6 +11,11 @@ import com.mtuci.vkr.repository.MainInfoRepository;
 import com.mtuci.vkr.repository.PriceHistoryRepository;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.output.ByteArrayOutputStream;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.openqa.selenium.By;
 import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebDriver;
@@ -20,6 +25,7 @@ import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
@@ -50,7 +56,6 @@ public class WildBerriesService {
         for (ExtendedInfo extendedInfo : extendedInfoList) {
             List<PriceHistory> priceHistoryList = priceHistoryRepository.findByProductId(extendedInfo.getId());
             extendedInfo.setPriceHistory(priceHistoryList);
-            log.info(extendedInfo.toString());
             extendedInfoRepository.save(extendedInfo);
         }
         return mainInfoList;
@@ -102,7 +107,6 @@ public class WildBerriesService {
                 conForExtendedInfo = (HttpURLConnection) objForExtendedInfo.openConnection();
                 conForExtendedInfo.setRequestMethod("GET");
                 conForExtendedInfo.setRequestProperty("User-Agent", "Mozilla/5.0");
-                log.info(urlForExtendedInfo);
                 i--;
             }
 
@@ -121,7 +125,6 @@ public class WildBerriesService {
                 }
 
                 BufferedReader inForPriceHistory;
-
                 inForExtendedInfo.close();
                 Gson gsonForExtendedInfo = new Gson();
                 JsonObject jsonObjectForExtendedInfo  = gsonForExtendedInfo.fromJson(responseForExtendedInfo.toString(), JsonObject.class);
@@ -130,10 +133,9 @@ public class WildBerriesService {
                 extendedInfo.setFullName(jsonObjectForExtendedInfo.get("imt_name").getAsString());
                 extendedInfo.setSubCategory(jsonObjectForExtendedInfo.get("subj_name").getAsString());
                 extendedInfo.setCategory( jsonObjectForExtendedInfo.get("subj_root_name").getAsString());
-
-                    extendedInfo.setDescription(jsonObjectForExtendedInfo.get("description").getAsString());
+                extendedInfo.setDescription(jsonObjectForExtendedInfo.get("description").getAsString());
                 } catch (Exception ex){
-                    log.info(ex.getMessage());
+                    log.warn(ex.getMessage());
                 }
 
                 JsonArray optionsArray = jsonObjectForExtendedInfo .getAsJsonArray("options");
@@ -176,15 +178,12 @@ public class WildBerriesService {
                 priceHistory.setProductId(id);
                 priceHistory.setPrice(0);
                 priceHistoryList.add(priceHistory);
-                log.warn(ex.getMessage());
+                log.warn(ex.getMessage() + " История цен для данного товара не доступна {}", id );
             }
             if(priceHistoryRepository.findByProductId(extendedInfo.getId()).isEmpty()){
                 priceHistoryRepository.saveAll(priceHistoryList);
             }
-
-
                 extendedInfoList.add(extendedInfo);
-
                 idListTemp.remove(0);
         }
         return extendedInfoList;
@@ -231,6 +230,7 @@ public class WildBerriesService {
         System.setProperty("webdriver.chrome.driver", "src/main/resources/chromedriver.exe");
         ChromeOptions options = new ChromeOptions();
         options.addArguments("--remote-allow-origins=*");
+        options.setHeadless(true);
         // Создание экземпляра WebDriver
         WebDriver driver = new ChromeDriver(options);
         String url = "https://www.wildberries.ru/catalog/0/search.aspx?search=" + request;
@@ -278,5 +278,94 @@ public class WildBerriesService {
         }
         driver.close();
         return idList;
+    }
+    public ResponseEntity<byte[]> exportExtendedInfoToExel(ExtendedInfo extendedInfo) throws IOException {
+        // Создание нового документа Excel
+        Workbook workbook = new XSSFWorkbook();
+        Sheet sheet = workbook.createSheet("ExtendedInfo");
+
+        // Заголовки столбцов
+        Row headerRow = sheet.createRow(0);
+        headerRow.createCell(0).setCellValue("ID");
+        headerRow.createCell(1).setCellValue("FullName");
+        headerRow.createCell(2).setCellValue("Category");
+        headerRow.createCell(3).setCellValue("SubCategory");
+        headerRow.createCell(4).setCellValue("Options");
+        headerRow.createCell(5).setCellValue("PriceHistory");
+        headerRow.createCell(6).setCellValue("Description");
+
+        // Данные
+        Row dataRow = sheet.createRow(1);
+        dataRow.createCell(0).setCellValue(extendedInfo.getId());
+        dataRow.createCell(1).setCellValue(extendedInfo.getFullName());
+        dataRow.createCell(2).setCellValue(extendedInfo.getCategory());
+        dataRow.createCell(3).setCellValue(extendedInfo.getSubCategory());
+        dataRow.createCell(4).setCellValue(extendedInfo.getOptions());
+        dataRow.createCell(5).setCellValue(extendedInfo.getPriceHistory().toString());
+        dataRow.createCell(6).setCellValue(extendedInfo.getDescription());
+
+        // Установка автоматического размера столбцов
+        for (int i = 0; i < 7; i++) {
+            sheet.autoSizeColumn(i);
+        }
+
+        // Преобразование документа в массив байтов
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        workbook.write(outputStream);
+        workbook.close();
+
+        byte[] fileContent = outputStream.toByteArray();
+
+        // Отправка файла в ответе
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+        headers.setContentDisposition(ContentDisposition.attachment().filename("extended_info.xlsx").build());
+        return new ResponseEntity<>(fileContent, headers, HttpStatus.OK);
+
+    }
+
+    public ResponseEntity<byte[]> exportMainInfoToExel(List<MainInfo> mainInfoList) throws IOException {
+        // Создание нового документа Excel
+        Workbook workbook = new XSSFWorkbook();
+        Sheet sheet = workbook.createSheet("MainInfo");
+
+        // Заголовки столбцов
+        Row headerRow = sheet.createRow(0);
+        headerRow.createCell(0).setCellValue("ID");
+        headerRow.createCell(1).setCellValue("Price");
+        headerRow.createCell(2).setCellValue("Sale Price");
+        headerRow.createCell(3).setCellValue("Rating");
+        headerRow.createCell(4).setCellValue("Brand");
+        headerRow.createCell(5).setCellValue("Pictures");
+
+        // Данные
+        int rowIndex = 1;
+        for (MainInfo mainInfo : mainInfoList) {
+            Row dataRow = sheet.createRow(rowIndex++);
+            dataRow.createCell(0).setCellValue(mainInfo.getId());
+            dataRow.createCell(1).setCellValue(mainInfo.getPriceU());
+            dataRow.createCell(2).setCellValue(mainInfo.getSalePrice());
+            dataRow.createCell(3).setCellValue(mainInfo.getRating());
+            dataRow.createCell(4).setCellValue(mainInfo.getBrand());
+            dataRow.createCell(5).setCellValue(mainInfo.getPics());
+        }
+
+        // Установка автоматического размера столбцов
+        for (int i = 0; i < 6; i++) {
+            sheet.autoSizeColumn(i);
+        }
+
+        // Преобразование документа в массив байтов
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        workbook.write(outputStream);
+        workbook.close();
+
+        byte[] fileContent = outputStream.toByteArray();
+
+        // Отправка файла в ответе
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+        headers.setContentDisposition(ContentDisposition.attachment().filename("main_info.xlsx").build());
+        return new ResponseEntity<>(fileContent, headers, HttpStatus.OK);
     }
 }

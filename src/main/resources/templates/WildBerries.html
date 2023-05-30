@@ -12,8 +12,12 @@
         <p class="menu">
             <a class="menu-link" href="/vkr/home">Главная</a>
         </p>
-        <p class="menu">Контакты</p>
-        <p class="menu">WildBerries</p>
+        <p class="menu">
+            <a class="menu-link" href="/vkr/home#form_message">Контакты</a>
+        </p>
+        <p class="menu">
+            <a class="menu-link" href="/vkr/home#services">Услуги</a>
+        </p>
         <p class="menu">О проекте</p>
     </div>
     <div class="line-1"></div>
@@ -29,8 +33,10 @@
             <input type="range" class="slider" min="1" max="50" value="1" oninput="updateSliderValue(this.value)">
             <div id="slider-value" class="slider-value">1</div>
         </div>
-        <div class = "get button">
-            <button id="getProductsMainInfoButton">Получить основную информацию</button>
+        <div class="button-container">
+            <div class="table-button">
+                <button id="getProductsMainInfoButton" class="button-style">Получить основную информацию</button>
+            </div>
         </div>
         <div class="table-container">
             <table id="productsTable" class="table">
@@ -47,12 +53,15 @@
                 <tbody id="productsBody"></tbody>
             </table>
         </div>
+        <div class="table-button">
+            <button id="exportMainInfoButton" class="button-style">Экспорт основной информации</button>
+        </div>
         <p class="header2">
             Введите Id товара для получения расширенной информации:
         </p>
         <input type="text" class="rectanglefortext">
-        <div class="get button">
-            <button id="getProductExtendedInfoButton">Получить расширенную информацию</button>
+        <div class="table-button">
+            <button id="getProductExtendedInfoButton"  class="button-style">Получить расширенную информацию</button>
         </div>
         <div class="table-container">
             <table id="productsExtendedInfoTable" class="table">
@@ -70,6 +79,9 @@
                 <tbody id="productsExtendedInfoBody"></tbody>
             </table>
         </div>
+        <div class="table-button">
+            <button id="exportExtendedInfoButton" class="button-style">Экспорт расширенной информации</button>
+        </div>
     </div>
 </div>
 
@@ -77,6 +89,21 @@
     function updateSliderValue(value) {
         var sliderValueElement = document.getElementById("slider-value");
         sliderValueElement.textContent = value;
+    }
+    function showAnnotationText(event) {
+        var button = event.target;
+        var div = button.parentNode;
+        var optionText = div.querySelector('.option-text');
+
+        if (div.classList.contains('expanded')) {
+            optionText.style.display = 'none';
+            button.textContent = 'Показать';
+            div.classList.remove('expanded');
+        } else {
+            optionText.style.display = 'block';
+            button.textContent = 'Скрыть';
+            div.classList.add('expanded');
+        }
     }
     document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('getProductsMainInfoButton').addEventListener('click', function() {
@@ -166,19 +193,57 @@
                     subCategoryCell.textContent = extendedInfo.subCategory;
                     row.appendChild(subCategoryCell);
 
-                    var optionsCell = document.createElement('td');
-                    optionsCell.textContent = extendedInfo.options;
-                    row.appendChild(optionsCell);
+
+                    var Option = document.createElement('td');
+                    var optionDiv = document.createElement('div');
+                    optionDiv.classList.add('option-div');
+
+                    var optionText = document.createElement('div');
+                    optionText.classList.add('option-text');
+                    optionText.textContent = extendedInfo.options;
+                    optionText.style.display = 'none';
+                    optionDiv.appendChild(optionText);
+
+                    var showButton = document.createElement('button');
+                    showButton.textContent = 'Показать';
+                    showButton.addEventListener('click', showAnnotationText);
+                    optionDiv.appendChild(showButton);
+
+                    Option.appendChild(optionDiv);
+                    row.appendChild(Option);
+
+
 
                     var priceHistoryCell = document.createElement('td');
-                    priceHistoryCell.textContent = extendedInfo.priceHistory.map(function(price) {
-                        return price.price;
-                    }).join(', ');
+                    if (extendedInfo.priceHistory[0].price === 0) {
+                        priceHistoryCell.textContent = 'История цен не доступна для данного товара';
+                    } else {
+                        priceHistoryCell.textContent = extendedInfo.priceHistory.map(function(price) {
+                            return price.price;
+                        }).join(', ');
+                    }
                     row.appendChild(priceHistoryCell);
 
-                    var descriptionCell = document.createElement('td');
-                    descriptionCell.textContent = extendedInfo.description;
-                    row.appendChild(descriptionCell);
+
+
+                    var Description = document.createElement('td');
+                    var descriptionDiv = document.createElement('div');
+                    descriptionDiv.classList.add('option-div');
+
+                    var descriptionText = document.createElement('div');
+                    descriptionText.classList.add('option-text');
+                    descriptionText.textContent = extendedInfo.description;
+                    descriptionText.style.display = 'none';
+                    descriptionDiv.appendChild(descriptionText);
+
+                    var showButton = document.createElement('button');
+                    showButton.textContent = 'Показать';
+                    showButton.addEventListener('click', showAnnotationText);
+                    descriptionDiv.appendChild(showButton);
+
+                    Description.appendChild(descriptionDiv);
+                    row.appendChild(Description);
+
 
                     tableBody.appendChild(row);
                 })
@@ -187,6 +252,13 @@
                     console.log(error);
                 });
         });
+    });
+    document.getElementById('exportExtendedInfoButton').addEventListener('click', function() {
+        window.location.href = '/vkr/exportExtendedInfoToExel';
+    });
+
+    document.getElementById('exportMainInfoButton').addEventListener('click', function() {
+        window.location.href = '/vkr/exportMainInfoToExel';
     });
 </script>
 </body>
