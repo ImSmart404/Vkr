@@ -141,11 +141,23 @@ public class WildBerriesService {
                 try {
                 extendedInfo.setId(id);
                 extendedInfo.setFullName(jsonObjectForExtendedInfo.get("imt_name").getAsString());
-                extendedInfo.setSubCategory(jsonObjectForExtendedInfo.get("subj_name").getAsString());
-                extendedInfo.setCategory( jsonObjectForExtendedInfo.get("subj_root_name").getAsString());
-                extendedInfo.setDescription(jsonObjectForExtendedInfo.get("description").getAsString());
+                } catch (Exception ex) {
+                    extendedInfo.setFullName("Продавец не установил название для данного товара");
+                }
+                try {
+                    extendedInfo.setCategory(jsonObjectForExtendedInfo.get("subj_name").getAsString());
                 } catch (Exception ex){
-                    log.warn(ex.getMessage());
+                    extendedInfo.setCategory("Продавец не установил категорию для данного товара");
+                }
+                try {
+                    extendedInfo.setSubCategory( jsonObjectForExtendedInfo.get("subj_root_name").getAsString());
+                } catch (Exception ex){
+                    extendedInfo.setSubCategory("Продавец не установил категорию для данного товара");
+                }
+                try{
+                    extendedInfo.setDescription(jsonObjectForExtendedInfo.get("description").getAsString());
+                } catch (Exception ex){
+                    extendedInfo.setDescription("Продавец не установил описание для данного товара");
                 }
 
                 JsonArray optionsArray = jsonObjectForExtendedInfo .getAsJsonArray("options");
