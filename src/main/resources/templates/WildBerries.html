@@ -18,7 +18,9 @@
         <p class="menu">
             <a class="menu-link" href="/vkr/home#services">Услуги</a>
         </p>
-        <p class="menu">О проекте</p>
+        <p class="menu">
+            <a class="menu-link" href="/vkr/home#info">О проекте</a>
+        </p>
     </div>
     <div class="line-1"></div>
     <div class="frame-1">
@@ -90,7 +92,7 @@
         var sliderValueElement = document.getElementById("slider-value");
         sliderValueElement.textContent = value;
     }
-    function showAnnotationText(event) {
+    function showTableText(event) {
         var button = event.target;
         var div = button.parentNode;
         var optionText = div.querySelector('.option-text');
@@ -206,7 +208,7 @@
 
                     var showButton = document.createElement('button');
                     showButton.textContent = 'Показать';
-                    showButton.addEventListener('click', showAnnotationText);
+                    showButton.addEventListener('click', showTableText);
                     optionDiv.appendChild(showButton);
 
                     Option.appendChild(optionDiv);
@@ -238,7 +240,7 @@
 
                     var showButton = document.createElement('button');
                     showButton.textContent = 'Показать';
-                    showButton.addEventListener('click', showAnnotationText);
+                    showButton.addEventListener('click', showTableText);
                     descriptionDiv.appendChild(showButton);
 
                     Description.appendChild(descriptionDiv);

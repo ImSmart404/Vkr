@@ -34,9 +34,11 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 @Service
 @Slf4j
@@ -47,17 +49,27 @@ public class WildBerriesService {
     ExtendedInfoRepository extendedInfoRepository;
 
     PriceHistoryRepository priceHistoryRepository;
-    public List<MainInfo> getProductsInfo(String request, Integer pages) throws InterruptedException, IOException {
-        List<Long> idList = getId(request,pages);
-        List<MainInfo> mainInfoList = getMainInfoListByProductsId(idList);
+    public List<MainInfo> getProductsInfo(String request, Integer pages) throws InterruptedException, IOException, ExecutionException {
+        log.info("Парсер начал работу");
+        Set<Long> idSet = getId(request,pages);
+        log.info("Получены id всех товаров");
+        ExecutorService executorService = Executors.newFixedThreadPool(2);
+        List<MainInfo> mainInfoList;
+        List<ExtendedInfo> extendedInfoList;
+        Future<List<MainInfo>> mainInfoFuture = executorService.submit(() -> getMainInfoListByProductsId(idSet));
+        Future<List<ExtendedInfo>> extendedInfoFuture = executorService.submit(() -> getExtendedInfoListByProductsId(idSet));
+        mainInfoList = mainInfoFuture.get();
+        extendedInfoList = extendedInfoFuture.get();
+        executorService.shutdown();
         mainInfoRepository.saveAll(mainInfoList);
-        List<ExtendedInfo> extendedInfoList = getExtendedInfoListByProductsId(idList);
-
+        log.info("Получена основная информация");
+        log.info("Получена расширенная информация");
         for (ExtendedInfo extendedInfo : extendedInfoList) {
             List<PriceHistory> priceHistoryList = priceHistoryRepository.findByProductId(extendedInfo.getId());
             extendedInfo.setPriceHistory(priceHistoryList);
             extendedInfoRepository.save(extendedInfo);
         }
+        log.info("Парсер завершил работу");
         return mainInfoList;
     }
 
@@ -67,9 +79,9 @@ public class WildBerriesService {
     }
 
 
-    public List<ExtendedInfo> getExtendedInfoListByProductsId(List<Long> idList) throws IOException {
+    public List<ExtendedInfo> getExtendedInfoListByProductsId(Set<Long> idSet) throws IOException {
         List<ExtendedInfo> extendedInfoList = new ArrayList<>();
-        List<Long> idListTemp = new ArrayList<>(idList);
+        List<Long> idListTemp = new ArrayList<>(idSet);
         Long id = 0L;
         while (!idListTemp.isEmpty()){
             List<PriceHistory> priceHistoryList = new ArrayList<>();
@@ -115,8 +127,6 @@ public class WildBerriesService {
                 HttpURLConnection conForPriceHistory = (HttpURLConnection) objForPriceHistory.openConnection();
                 conForPriceHistory.setRequestMethod("GET");
                 conForPriceHistory.setRequestProperty("User-Agent", "Mozilla/5.0");
-
-
                 BufferedReader inForExtendedInfo = new BufferedReader(new InputStreamReader(conForExtendedInfo.getInputStream()));
                 String inputLineForExtendedInfo;
                 StringBuffer responseForExtendedInfo = new StringBuffer();
@@ -149,8 +159,6 @@ public class WildBerriesService {
                 String optionsJson = gsonForExtendedInfo.toJson(options);
 
                 extendedInfo.setOptions(optionsJson);
-
-
             try{
                 inForPriceHistory = new BufferedReader(new InputStreamReader(conForPriceHistory.getInputStream()));
                 String inputLineForPriceHistory;
@@ -190,9 +198,9 @@ public class WildBerriesService {
     }
 
     // Метод который возвращает преобразованные в обьект Product продукты по их id
-    public List<MainInfo> getMainInfoListByProductsId(List<Long> idList) throws IOException {
+    public List<MainInfo> getMainInfoListByProductsId(Set<Long> idSet) throws IOException {
         List<MainInfo> mainInfoList = new ArrayList<>();
-        List<Long> idListTemp = new ArrayList<>(idList);
+        List<Long> idListTemp = new ArrayList<>(idSet);
         Long id = 0L;
         int i =0;
         while (!idListTemp.isEmpty()){
@@ -225,7 +233,7 @@ public class WildBerriesService {
     }
 
     //Метод который по запросу пользователя парсит по указанному количеству страниц id всех товаров
-    public List<Long> getId(String request, Integer pages) throws InterruptedException {
+    public Set<Long> getId(String request, Integer pages) throws InterruptedException {
         // Установка пути к драйверу Chrome
         System.setProperty("webdriver.chrome.driver", "src/main/resources/chromedriver.exe");
         ChromeOptions options = new ChromeOptions();
@@ -236,23 +244,23 @@ public class WildBerriesService {
         String url = "https://www.wildberries.ru/catalog/0/search.aspx?search=" + request;
         driver.get(url);
         // Явное ожидание элемента
-        List<Long> idList = new ArrayList<>();
+        Set<Long> idSet = new HashSet<>();
         List<WebElement> products;
         while (pages!=0){
-            WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+            WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(3));
             By productSelector = By.className("product-card-list");
             WebElement productElement = wait.until(ExpectedConditions.visibilityOfElementLocated(productSelector));
             // Получение списка товаров
             products = productElement.findElements(By.cssSelector("a.product-card__link"));
             int numberOfProducts = products.size();
-            WebDriverWait wait1 = new WebDriverWait(driver, Duration.ofSeconds(10));
+            WebDriverWait wait1 = new WebDriverWait(driver, Duration.ofSeconds(1));
             By productSelector1 = By.cssSelector("#catalog > div > div.pagination > div > a.pagination-next.pagination__next.j-next-page");
             // Цикл для прокручивания страницы до последнего элемента списка товаров
             while (true) {
                 Actions actions = new Actions(driver);
                 actions.moveToElement(products.get(numberOfProducts - 1));
                 actions.perform();
-                Thread.sleep(1000); // замедление прокрутки на 1 секунду
+                Thread.sleep(200); // замедление прокрутки на 200 милисекунд
                 List<WebElement> updatedProducts = driver.findElements(By.cssSelector("a.product-card__link"));
                 if (updatedProducts.size() == numberOfProducts) {
                     break;
@@ -261,11 +269,11 @@ public class WildBerriesService {
                     products = updatedProducts;
                 }
             }
-            // Запись ссылок и id всех товаров в hashMap
+            // Запись ссылок и id всех товаров в List
             for (WebElement product : products) {
                 String href = product.getAttribute("href");
                 String id = (href.substring(href.lastIndexOf("g") + 2, href.lastIndexOf("d") - 1));
-                idList.add(Long.parseLong(id));
+                idSet.add(Long.parseLong(id));
             }
             try {
                 WebElement nextPageButton = wait1.until(ExpectedConditions.visibilityOfElementLocated(productSelector1));
@@ -277,7 +285,7 @@ public class WildBerriesService {
             pages--;
         }
         driver.close();
-        return idList;
+        return idSet;
     }
     public ResponseEntity<byte[]> exportExtendedInfoToExel(ExtendedInfo extendedInfo) throws IOException {
         // Создание нового документа Excel

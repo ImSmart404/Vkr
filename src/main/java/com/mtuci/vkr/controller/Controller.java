@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
 
 @org.springframework.stereotype.Controller
 @RequestMapping("/vkr")
@@ -30,7 +31,7 @@ public class Controller {
     final WildBerriesService wildBerriesService;
 
     @GetMapping("/getProductsMainInfo")
-    public ResponseEntity<List<MainInfo>> getProductsMainInfo(@RequestParam("productName") String productName, @RequestParam(value = "pages") Integer pages) throws InterruptedException, IOException {
+    public ResponseEntity<List<MainInfo>> getProductsMainInfo(@RequestParam("productName") String productName, @RequestParam(value = "pages") Integer pages) throws InterruptedException, IOException, ExecutionException {
         return ResponseEntity.ok().body(currentMainInfoList = wildBerriesService.getProductsInfo(productName, pages)) ;
     }
     @GetMapping("/getProductExtendedInfo")

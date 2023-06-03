@@ -2,6 +2,7 @@
 <html>
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Система парсинга</title>
     <link rel="stylesheet" th:href="@{/HomeStyles.css?v=123456}">
 </head>
@@ -19,7 +20,9 @@
         <p class="menu">
             <a class="menu-link" href="#services">Услуги</a>
         </p>
-        <p class="menu">О проекте</p>
+        <p class="menu">
+            <a class="menu-link" href="#info">О проекте</a>
+        </p>
     </div>
     <div class="frame-6">
         <p class="header1">
@@ -34,7 +37,7 @@
                 src="https://static.overlay-tech.com/assets/7a0c8767-2c26-41cc-b200-b8752c54e6b2.png"
         />
         <div class="line-1"></div>
-        <p class="header1">Услуги</p>
+        <p class="header1" >Услуги</p>
     </div>
     <div class="frame-2" id="services">
         <div class="frame-1">
@@ -79,8 +82,18 @@
         </div>
     </div>
     <div class="line-1"></div>
+    <div class="container" id="info">
+        <div class="info-block">
+            <div class="paragraphs">
+                <h2 class="header1">Для чего создавалась «Система парсинга важной информации»?</h2>
+                <p class="info-text">Данная работа разработана в пределах выпускной квалификационной работы студентом МТУСИ в 2023 году. Она создавалась из-за того, что сбор данных может быть трудоемким и затратным процессом, особенно если речь идет о больших объемах информации. Для получения которой, использование системы парсинга может стать необходимостью.</p>
+                <p class="info-text">Разработка такой системы является актуальной темой в современном мире, где огромные объемы данных генерируются ежесекундно. Парсинг, или сбор информации, является неотъемлемой частью процесса анализа данных и помогает организациям принимать более обоснованные решения, опираясь на точные и актуальные данные.</p>
+            </div>
+        </div>
+    </div>
+    <div class="line-1"></div>
     <form name="form" id="form_message">
-        <h2>Форма обратной связи.</h2>
+        <h2>Форма обратной связи</h2>
         <p> <div class="titles">Ваше имя*</div> <input class="input" name="name" type="text" required /> </p>
         <p> <div class="titles">Электронная почта*</div> <input class="input" name="email" type="text" required /> </p>
         <p> <div class="titles">Тема сообщения</div> <input class="input" name="title" type="text"/> </p>
