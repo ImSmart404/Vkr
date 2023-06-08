@@ -195,7 +195,6 @@
                     subCategoryCell.textContent = extendedInfo.subCategory;
                     row.appendChild(subCategoryCell);
 
-
                     var Option = document.createElement('td');
                     var optionDiv = document.createElement('div');
                     optionDiv.classList.add('option-div');
@@ -213,10 +212,8 @@
 
                     Option.appendChild(optionDiv);
                     row.appendChild(Option);
-
-
-
                     var priceHistoryCell = document.createElement('td');
+
                     if (extendedInfo.priceHistory[0].price === 0) {
                         priceHistoryCell.textContent = 'История цен не доступна для данного товара';
                     } else {
@@ -225,9 +222,6 @@
                         }).join(', ');
                     }
                     row.appendChild(priceHistoryCell);
-
-
-
                     var Description = document.createElement('td');
                     var descriptionDiv = document.createElement('div');
                     descriptionDiv.classList.add('option-div');
@@ -245,7 +239,6 @@
 
                     Description.appendChild(descriptionDiv);
                     row.appendChild(Description);
-
 
                     tableBody.appendChild(row);
                 })

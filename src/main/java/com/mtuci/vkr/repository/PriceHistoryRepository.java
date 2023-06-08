@@ -1,6 +1,4 @@
 package com.mtuci.vkr.repository;
-
-import com.mtuci.vkr.model.ExtendedInfo;
 import com.mtuci.vkr.model.PriceHistory;
 import org.springframework.data.jpa.repository.JpaRepository;
 

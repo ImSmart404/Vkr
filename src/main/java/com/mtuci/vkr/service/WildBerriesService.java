@@ -44,10 +44,8 @@ import java.util.concurrent.Future;
 @Slf4j
 @AllArgsConstructor
 public class WildBerriesService {
-
     MainInfoRepository mainInfoRepository;
     ExtendedInfoRepository extendedInfoRepository;
-
     PriceHistoryRepository priceHistoryRepository;
     public List<MainInfo> getProductsInfo(String request, Integer pages) throws InterruptedException, IOException, ExecutionException {
         log.info("Парсер начал работу");
@@ -77,8 +75,6 @@ public class WildBerriesService {
 
         return extendedInfoRepository.findById(id);
     }
-
-
     public List<ExtendedInfo> getExtendedInfoListByProductsId(Set<Long> idSet) throws IOException {
         List<ExtendedInfo> extendedInfoList = new ArrayList<>();
         List<Long> idListTemp = new ArrayList<>(idSet);
